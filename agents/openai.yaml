@@ -1,0 +1,4 @@
+interface:
+  display_name: "Image-to-Video Director"
+  short_description: "Classify products, confirm assets, then direct camera motion"
+  default_prompt: "Use $image-to-video-director to identify and confirm the subject class and source assets before designing a professional image-to-video shot."
