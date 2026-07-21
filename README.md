@@ -1,6 +1,18 @@
 # hiapi-image-to-video-camera-motion-skill
 
-一个面向 Codex 的专业图生视频运镜 Skill。它会先判断静态图片能够安全支持多大幅度的镜头运动，再根据画面主体、商业目标和模型能力，设计推拉摇移、升降、环绕、跟拍、微距滑动等镜头，并输出可直接交给图生视频模型使用的提示词与结构化运动方案。
+一个兼容 Codex 与 Claude Code 的专业图生视频运镜 Skill。它会先判断静态图片能够安全支持多大幅度的镜头运动，再根据画面主体、商业目标和模型能力，设计推拉摇移、升降、环绕、跟拍、微距滑动等镜头，并输出可直接交给图生视频模型使用的提示词与结构化运动方案。
+
+## 平台兼容性
+
+核心能力采用通用的 `SKILL.md + references + scripts` 目录结构，Codex 和 Claude Code 均可读取同一套技能文件，无需维护平台专用副本。
+
+| 平台 | 安装位置 | 显式调用方式 |
+| --- | --- | --- |
+| Codex | `$CODEX_HOME/skills/image-to-video-director/`，未设置时通常为 `~/.codex/skills/image-to-video-director/` | `$image-to-video-director` |
+| Claude Code（个人） | `~/.claude/skills/image-to-video-director/` | `/image-to-video-director` |
+| Claude Code（项目） | `<项目目录>/.claude/skills/image-to-video-director/` | `/image-to-video-director` |
+
+Claude Code 会使用 `SKILL.md`、`references/` 和 `scripts/`。`agents/openai.yaml` 仅用于 Codex 的技能列表与默认提示界面，Claude Code 会忽略该文件，不影响技能执行。两个平台也都可以根据 `SKILL.md` 中的描述，在符合场景时自动选择该技能。
 
 ## 核心能力
 
@@ -32,9 +44,29 @@ Skill 默认遵循以下流程：
 
 对于单张图片无法可靠重建的内容，Skill 会主动降低运动幅度。例如，将 360 度环绕改为小角度弧线移动，或建议补充多视角素材，而不是用提示词强行生成不可见表面。
 
+## 安装
+
+将整个仓库克隆或复制到对应平台的技能目录，并确保目录名为 `image-to-video-director`。安装后重新启动会话，使平台重新发现技能。
+
+Codex 个人安装示例：
+
+```bash
+git clone https://github.com/HiAPIAI/hiapi-image-to-video-camera-motion-skill.git ~/.codex/skills/image-to-video-director
+```
+
+Claude Code 个人安装示例：
+
+```bash
+git clone https://github.com/HiAPIAI/hiapi-image-to-video-camera-motion-skill.git ~/.claude/skills/image-to-video-director
+```
+
+Claude Code 项目级安装时，将目标目录改为当前项目下的 `.claude/skills/image-to-video-director`。项目级技能可随项目提交并由团队共享。
+
+运行 `scripts/validate_motion_plan.py` 需要 Python 3.9 或更高版本。
+
 ## 使用示例
 
-安装后可通过 `$image-to-video-director` 显式调用：
+在 Codex 中可通过 `$image-to-video-director` 显式调用：
 
 ```text
 使用 $image-to-video-director 分析这张产品图，设计一个 5 秒的缓慢推近镜头，保持包装文字和 Logo 不变。
@@ -44,12 +76,18 @@ Skill 默认遵循以下流程：
 使用 $image-to-video-director 检查这段图生视频为什么人物面部和背景在环绕时变形，并给出更稳妥的重做方案。
 ```
 
+在 Claude Code 中使用 `/image-to-video-director`：
+
+```text
+/image-to-video-director 分析这张建筑图片，设计一个安全的小幅向右弧线运镜，并输出模型可用的英文提示词。
+```
+
 ## 目录结构
 
 ```text
 .
 ├── SKILL.md                         # Skill 入口、工作流与输出契约
-├── agents/openai.yaml               # Codex 界面元数据
+├── agents/openai.yaml               # Codex 界面元数据，Claude Code 可忽略
 ├── references/                      # 运镜、源图分析、模型路由与质检资料
 └── scripts/validate_motion_plan.py  # 结构化运动计划校验器
 ```
