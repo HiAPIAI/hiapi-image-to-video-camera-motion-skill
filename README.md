@@ -1,5 +1,9 @@
 # hiapi-image-to-video-camera-motion-skill
 
+[中文](#中文) | [English](#english)
+
+## 中文
+
 一个兼容 Codex 与 Claude Code 的专业图生视频运镜 Skill。它会先判断静态图片能够安全支持多大幅度的镜头运动，再根据画面主体、商业目标和模型能力，设计推拉摇移、升降、环绕、跟拍、微距滑动等镜头，并输出可直接交给图生视频模型使用的提示词与结构化运动方案。
 
 ## 平台兼容性
@@ -115,3 +119,121 @@ python scripts/validate_motion_plan.py plan.json --strict
 - 把大幅平移与环绕视为重建任务，而不是普通风格词。
 - 优先生成保守基线，每次只改变一个变量。
 - 没有生成或检查工具时，不声称已经生成或通过视觉验收。
+
+## English
+
+A professional image-to-video camera direction skill compatible with Codex and Claude Code. It first determines how much camera movement a still image can safely support, then designs push-ins, pull-outs, pans, tilts, pedestal and crane moves, arcs, orbits, tracking shots, and macro glides based on the subject, production goal, and actual model capabilities. The skill produces model-ready prompts and structured motion plans.
+
+### Platform Compatibility
+
+The core capability uses a portable `SKILL.md + references + scripts` structure. Codex and Claude Code can load the same skill files without separate platform-specific implementations.
+
+| Platform | Installation location | Explicit invocation |
+| --- | --- | --- |
+| Codex | `$CODEX_HOME/skills/image-to-video-director/`, usually `~/.codex/skills/image-to-video-director/` when unset | `$image-to-video-director` |
+| Claude Code (personal) | `~/.claude/skills/image-to-video-director/` | `/image-to-video-director` |
+| Claude Code (project) | `<project>/.claude/skills/image-to-video-director/` | `/image-to-video-director` |
+
+Claude Code uses `SKILL.md`, `references/`, and `scripts/`. The `agents/openai.yaml` file only provides Codex skill-list and default-prompt metadata; Claude Code ignores it without affecting skill behavior. Both platforms may also select the skill automatically when a request matches the description in `SKILL.md`.
+
+### Core Capabilities
+
+- Classify products, people, architecture, interfaces, food, environments, and other subjects, then confirm the required assets and production path.
+- Analyze depth, occlusion, edge reserve, rigid geometry, typography, and identity-preservation risks.
+- Distinguish camera translation, rotation, zoom, orbit, and tracking, with bounded travel, speed, timing, and end-frame intent.
+- Adapt prompts, negative prompts, duration, aspect ratio, and camera controls to the capabilities actually exposed by a selected model.
+- Review generated clips for identity, geometry, motion continuity, focus, and end-frame quality, then propose targeted corrections.
+- Validate structured motion plans and common high-risk combinations with a deterministic Python script.
+
+### Use Cases
+
+- E-commerce product showcases and brand advertising shots
+- Subtle animation for portraits, characters, and fashion imagery
+- Spatial presentation of architecture, interiors, and landscapes
+- Detail shots for food, beauty products, jewelry, and similar subjects
+- Deterministic pan, zoom, scroll, or compositing plans for websites and software interfaces
+- Distortion diagnosis and prompt repair for existing image-to-video results
+
+### Workflow
+
+The skill follows this default process:
+
+1. Classify the subject, supporting evidence, required assets, and proposed production path, then wait for user confirmation.
+2. Inspect whether the source image can support the requested move and establish the maximum safe movement.
+3. Define the shot purpose, select one dominant camera behavior, and design the start and end frames.
+4. Produce a Chinese director note, an English model-ready prompt, and a structured motion plan.
+5. When an authorized generation tool is available, adapt the plan to the model, generate the clip, and perform visual quality control.
+
+When a single image cannot reliably support the requested reconstruction, the skill reduces the movement to a viable alternative. For example, it may replace a 360-degree orbit with a small inspection arc or request additional views instead of forcing a model to invent unseen surfaces.
+
+### Installation
+
+Clone or copy the entire repository into the appropriate skill directory and name the destination folder `image-to-video-director`. Start a new session after installation so the platform can discover the skill.
+
+Codex personal installation:
+
+```bash
+git clone https://github.com/HiAPIAI/hiapi-image-to-video-camera-motion-skill.git ~/.codex/skills/image-to-video-director
+```
+
+Claude Code personal installation:
+
+```bash
+git clone https://github.com/HiAPIAI/hiapi-image-to-video-camera-motion-skill.git ~/.claude/skills/image-to-video-director
+```
+
+For a project-level Claude Code installation, use `.claude/skills/image-to-video-director` inside the target project. Project-level skills can be committed and shared with the team.
+
+Python 3.9 or later is required to run `scripts/validate_motion_plan.py`.
+
+### Usage Examples
+
+Invoke the skill explicitly in Codex with `$image-to-video-director`:
+
+```text
+Use $image-to-video-director to analyze this product image and design a slow five-second push-in while preserving the packaging text and logo.
+```
+
+```text
+Use $image-to-video-director to diagnose why the face and background deform during the orbit in this generated clip, then propose a safer revision.
+```
+
+Invoke it in Claude Code with `/image-to-video-director`:
+
+```text
+/image-to-video-director Analyze this architecture image, design a safe small arc to the right, and produce an English model-ready prompt.
+```
+
+### Repository Structure
+
+```text
+.
+|-- SKILL.md                         # Skill entry point, workflow, and output contract
+|-- agents/openai.yaml               # Codex UI metadata; ignored by Claude Code
+|-- references/                      # Motion, source analysis, model routing, and QA guidance
+`-- scripts/validate_motion_plan.py  # Structured motion-plan validator
+```
+
+### Validate a Motion Plan
+
+Save the structured plan as JSON and run:
+
+```bash
+python scripts/validate_motion_plan.py plan.json
+```
+
+Strict mode treats warnings as failures:
+
+```bash
+python scripts/validate_motion_plan.py plan.json --strict
+```
+
+The validator checks field completeness and high-risk motion combinations. It does not replace provider-specific schema validation or visual review of the generated video.
+
+### Design Principles
+
+- Keep one dominant camera behavior in each short clip.
+- Preserve subject identity, product geometry, text, logos, lighting, and spatial relationships.
+- Treat large translations and orbits as reconstruction requests, not decorative style terms.
+- Generate a conservative baseline first and change one variable per iteration.
+- Never claim that a clip was generated or visually approved when generation or inspection tools were unavailable.
